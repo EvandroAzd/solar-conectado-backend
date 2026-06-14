@@ -1,0 +1,502 @@
+@startuml SolarConectado
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.2
+skinparam linetype ortho
+
+skinparam class {
+    BorderThickness 1.4
+    AttributeFontSize 10
+    OperationFontSize 10
+}
+
+' ─────────────────────────────────────────
+'  CLASSES EXTERNAS
+' ─────────────────────────────────────────
+interface JpaRepository <<interface>>
+interface UserDetails <<interface>>
+interface UserDetailsService <<interface>>
+abstract class OncePerRequestFilter
+interface ApplicationRunner <<interface>>
+abstract class RuntimeException
+
+' ─────────────────────────────────────────
+'  PACOTE: enum
+' ─────────────────────────────────────────
+package "enum" #FFFDE7 {
+
+    enum TipoContato {
+        WHATSAPP
+        FIXO
+        CELULAR
+    }
+
+    enum TipoCampanha {
+        DINHEIRO
+        PRODUTO
+        CONSCIENTIZACAO
+        DIVULGACAO
+    }
+
+    enum TipoPagamento {
+        PIX
+        DINHEIRO
+        CARTAO
+        TRANSFERENCIA
+        OUTRO
+    }
+
+    enum StatusPagamento {
+        PAGO
+        PENDENTE
+        CANCELADO
+    }
+
+    enum DestinoProduto {
+        CONSUMO
+        BAZAR
+    }
+
+    enum StatusEntradaProduto {
+        CONFIRMADO
+        PENDENTE
+        CANCELADO
+    }
+
+    enum StatusItemBazar {
+        DISPONIVEL
+        RESERVADO
+        ESGOTADO
+        RETIRADO
+    }
+
+    enum TipoTransacao {
+        VENDA
+        DOACAO
+    }
+
+    enum AcaoAuditoria {
+        INSERT
+        UPDATE
+        DELETE
+    }
+
+    enum TipoPonto {
+        DOACAO_DINHEIRO
+        DOACAO_PRODUTO
+        COMPARTILHAMENTO
+        INDICACAO
+    }
+}
+
+' ─────────────────────────────────────────
+'  PACOTE: entity
+' ─────────────────────────────────────────
+package "entity" #E3F2FD {
+
+    class Usuario {
+        - id : UUID
+        - nome : String
+        - cpf : String
+        - email : String
+        - senha : String
+        - urlFoto : String
+        - dataHoraCad : LocalDateTime
+        - dataHoraAtualizacao : LocalDateTime
+        - ativo : boolean
+        --
+        + getAuthorities() : Collection
+        + getPassword() : String
+        + getUsername() : String
+        + isEnabled() : boolean
+    }
+
+    class Adm {
+        - id : UUID
+        - cargo : String
+        - isMaster : boolean
+        - ativo : boolean
+    }
+
+    class Empresa {
+        - id : UUID
+        - nome : String
+        - cnpj : String
+        - email : String
+        - descricao : String
+        - urlLogo : String
+        - ativo : boolean
+        - dataHoraCad : LocalDateTime
+        - dataHoraUpdate : LocalDateTime
+    }
+
+    class Doador {
+        - id : UUID
+        - anonimo : boolean
+        - nome : String
+        - email : String
+        - cpf : String
+        - dataHoraCad : LocalDateTime
+    }
+
+    class Contato {
+        - id : int
+        - nomeContato : String
+        - numeroContato : String
+        - tipo : TipoContato
+    }
+
+    class Campanha {
+        - id : UUID
+        - titulo : String
+        - descricao : String
+        - dataHoraInit : LocalDateTime
+        - dataHoraFinal : LocalDateTime
+        - tipoCampanha : TipoCampanha
+        - metaValor : BigDecimal
+        - metaQtd : int
+        - ativo : boolean
+    }
+
+    class CentroCusto {
+        - id : int
+        - nome : String
+        - descricao : String
+        - ativo : boolean
+        - dataHoraCad : LocalDateTime
+    }
+
+    class EntradaMoeda {
+        - id : int
+        - dataHoraEntrada : LocalDateTime
+        - valor : BigDecimal
+        - tipoPagamento : TipoPagamento
+        - status : StatusPagamento
+    }
+
+    class SaidaMoeda {
+        - id : int
+        - dataHoraSaida : LocalDateTime
+        - valor : BigDecimal
+        - descricao : String
+    }
+
+    class CategoriaProduto {
+        - id : int
+        - nome : String
+        - ativo : boolean
+    }
+
+    class Produto {
+        - id : UUID
+        - nome : String
+        - descricao : String
+        - urlImagem : String
+        - ativo : boolean
+    }
+
+    class EntradaProduto {
+        - id : int
+        - destino : DestinoProduto
+        - dataHoraEntrada : LocalDateTime
+        - quantidade : int
+        - status : StatusEntradaProduto
+    }
+
+    class ItemBazar {
+        - id : UUID
+        - quantidade : int
+        - qtdDisponivel : int
+        - valorUnitario : BigDecimal
+        - gratuito : boolean
+        - status : StatusItemBazar
+        - dataHoraAdd : LocalDateTime
+        - dataHoraUpdate : LocalDateTime
+    }
+
+    class SaidaProduto {
+        - id : int
+        - quantidade : int
+        - observacao : String
+        - dataHoraSaida : LocalDateTime
+    }
+
+    class TransacaoBazar {
+        - id : int
+        - quantidade : int
+        - tipo : TipoTransacao
+        - valorTotal : BigDecimal
+        - dataHoraTransacao : LocalDateTime
+    }
+
+    class LogAuditoria {
+        - id : int
+        - tabela : String
+        - idRegistro : String
+        - acao : AcaoAuditoria
+        - dadosAnteriores : String
+        - dadosNovos : String
+        - dataHora : LocalDateTime
+    }
+
+    class ConfigGamificacao {
+        - id : int
+        - multiplicadorDinheiro : BigDecimal
+        - pontosCompartilhamento : int
+        - pontosIndicacao : int
+        - pontosPorProduto : int
+        - dataHoraUpdate : LocalDateTime
+    }
+
+    class PontosUsuario {
+        - id : int
+        - totalPontos : int
+        - dataHoraUpdate : LocalDateTime
+    }
+
+    class HistoricoPontos {
+        - id : int
+        - pontos : int
+        - tipo : TipoPonto
+        - idReferencia : String
+        - tabelaReferencia : String
+        - dataHora : LocalDateTime
+    }
+
+    class Compartilhamento {
+        - id : int
+        - token : String
+        - pontosCreditados : boolean
+        - dataHoraCad : LocalDateTime
+    }
+
+    class Indicacao {
+        - id : int
+        - pontosCreditados : boolean
+        - dataHoraCad : LocalDateTime
+    }
+
+    class ImagemCampanha {
+        - id : int
+        - url : String
+        - principal : boolean
+        - dataHoraCad : LocalDateTime
+    }
+
+    class LogCampanha {
+        - id : int
+        - acao : String
+        - detalhe : String
+        - dataHora : LocalDateTime
+    }
+
+    class RepresentanteEmpresa {
+        - id : int
+        - cargo : String
+        - principal : boolean
+        - ativo : boolean
+        - dataHoraCad : LocalDateTime
+    }
+
+    ' ── implements
+    Usuario ..|> UserDetails
+
+    ' ── ManyToOne
+    Adm "*" ---> "1" Usuario : usuario
+    Empresa "*" ---> "0..1" Usuario : usuario
+    Doador "*" ---> "0..1" Usuario : usuario
+    Doador "*" ---> "0..1" Empresa : empresa
+    Contato "*" ---> "0..1" Usuario : usuario
+    Contato "*" ---> "0..1" Doador : doador
+    Campanha "*" ---> "1" Usuario : criador
+    Campanha "*" ---> "1" Usuario : responsavel
+    EntradaMoeda "*" ---> "0..1" Campanha : campanha
+    EntradaMoeda "*" ---> "1" Doador : doador
+    EntradaMoeda "*" ---> "1" Usuario : gerenciador
+    SaidaMoeda "*" ---> "0..1" Campanha : campanha
+    SaidaMoeda "*" ---> "1" Usuario : solicitante
+    SaidaMoeda "*" ---> "1" Usuario : responsavel
+    SaidaMoeda "*" ---> "1" CentroCusto : centroCusto
+    Produto "*" ---> "1" Usuario : criador
+    Produto "*" ---> "1" CategoriaProduto : categoria
+    EntradaProduto "*" ---> "0..1" Campanha : campanha
+    EntradaProduto "*" ---> "1" Doador : doador
+    EntradaProduto "*" ---> "1" Usuario : responsavel
+    EntradaProduto "*" ---> "1" Produto : produto
+    ItemBazar "*" ---> "1" Produto : produto
+    ItemBazar "*" ---> "1" EntradaProduto : entradaProduto
+    ItemBazar "*" ---> "1" Usuario : responsavel
+    SaidaProduto "*" ---> "1" CentroCusto : centroCusto
+    SaidaProduto "*" ---> "1" Usuario : responsavel
+    SaidaProduto "*" ---> "1" Produto : produto
+    SaidaProduto "*" ---> "0..1" EntradaProduto : entradaProduto
+    SaidaProduto "*" ---> "0..1" ItemBazar : itemBazar
+    TransacaoBazar "*" ---> "1" ItemBazar : item
+    TransacaoBazar "*" ---> "1" Usuario : recebedor
+    LogAuditoria "*" ---> "0..1" Usuario : usuario
+    PontosUsuario "*" ---> "1" Usuario : usuario
+    HistoricoPontos "*" ---> "1" Usuario : usuario
+    HistoricoPontos "*" ---> "0..1" Campanha : campanha
+    Compartilhamento "*" ---> "1" Usuario : usuario
+    Compartilhamento "*" ---> "1" Campanha : campanha
+    Indicacao "*" ---> "1" Compartilhamento : compartilhamento
+    Indicacao "*" ---> "1" Usuario : usuarioIndicado
+    ImagemCampanha "*" ---> "1" Campanha : campanha
+    LogCampanha "*" ---> "1" Campanha : campanha
+    LogCampanha "*" ---> "1" Usuario : adm
+    RepresentanteEmpresa "*" ---> "1" Empresa : empresa
+    RepresentanteEmpresa "*" ---> "1" Usuario : usuario
+
+    ' ── enum → entity
+    Contato ..> TipoContato
+    Campanha ..> TipoCampanha
+    EntradaMoeda ..> TipoPagamento
+    EntradaMoeda ..> StatusPagamento
+    EntradaProduto ..> DestinoProduto
+    EntradaProduto ..> StatusEntradaProduto
+    ItemBazar ..> StatusItemBazar
+    TransacaoBazar ..> TipoTransacao
+    LogAuditoria ..> AcaoAuditoria
+    HistoricoPontos ..> TipoPonto
+}
+
+' ─────────────────────────────────────────
+'  PACOTE: repository
+' ─────────────────────────────────────────
+package "repository" #E8F5E9 {
+
+    interface UsuarioRepository {
+        + findByEmail(email : String) : Optional<Usuario>
+        + existsByEmail(email : String) : boolean
+        + existsByCpf(cpf : String) : boolean
+    }
+
+    interface AdmRepository {
+        + existsByIsMaster(isMaster : boolean) : boolean
+    }
+
+    UsuarioRepository --|> JpaRepository
+    AdmRepository --|> JpaRepository
+}
+
+' ─────────────────────────────────────────
+'  PACOTE: service
+' ─────────────────────────────────────────
+package "service" #FFF3E0 {
+
+    class UsuarioService {
+        - usuarioRepository : UsuarioRepository
+        - passwordEncoder : PasswordEncoder
+        --
+        + loadUserByUsername(email : String) : UserDetails
+        + cadastrarUsuarioInterno(dto : UsuarioCadastroDTO) : Usuario
+        + cadastrarUsuario(dto : UsuarioCadastroDTO) : UsuarioResponseDTO
+        + buscarPorId(id : UUID) : UsuarioResponseDTO
+    }
+
+    class AdmService {
+        - admRepository : AdmRepository
+        - usuarioService : UsuarioService
+        --
+        + cadastrarAdmMaster(nome : String, email : String, senha : String, cpf : String) : void
+        + buscarPorId(id : UUID) : Adm
+    }
+
+    class JwtService {
+        - secret : String
+        - expirationMs : long
+        --
+        + gerarToken(email : String) : String
+        + extrairEmail(token : String) : String
+        + tokenValido(token : String, email : String) : boolean
+    }
+
+    UsuarioService ..|> UserDetailsService
+    UsuarioService ..> UsuarioRepository : usa
+    AdmService ..> AdmRepository : usa
+    AdmService ..> UsuarioService : usa
+}
+
+' ─────────────────────────────────────────
+'  PACOTE: dto
+' ─────────────────────────────────────────
+package "dto" #F3E5F5 {
+
+    class UsuarioCadastroDTO <<record>> {
+        + nome : String
+        + cpf : String
+        + email : String
+        + senha : String
+    }
+
+    class UsuarioResponseDTO <<record>> {
+        + id : UUID
+        + nome : String
+        + email : String
+        + cpf : String
+        + ativo : boolean
+        + criadoEm : LocalDateTime
+        --
+        + {static} de(usuario : Usuario) : UsuarioResponseDTO
+    }
+
+    UsuarioService ..> UsuarioCadastroDTO : recebe
+    UsuarioService ..> UsuarioResponseDTO : retorna
+    UsuarioResponseDTO ..> Usuario : de()
+}
+
+' ─────────────────────────────────────────
+'  PACOTE: config
+' ─────────────────────────────────────────
+package "config" #ECEFF1 {
+
+    class SecurityConfig <<@Configuration>> {
+        - jwtFilter : JwtFilter
+        --
+        + securityFilterChain(http : HttpSecurity) : SecurityFilterChain
+        + authenticationManager(config : AuthenticationConfiguration) : AuthenticationManager
+        + passwordEncoder() : PasswordEncoder
+    }
+
+    class JwtFilter {
+        - jwtService : JwtService
+        - usuarioService : UsuarioService
+        --
+        # doFilterInternal(request : HttpServletRequest, response : HttpServletResponse, filterChain : FilterChain) : void
+    }
+
+    class AdminMasterSeeder {
+        - admService : AdmService
+        --
+        + run(args : ApplicationArguments) : void
+    }
+
+    JwtFilter --|> OncePerRequestFilter
+    AdminMasterSeeder ..|> ApplicationRunner
+    JwtFilter ..> JwtService : usa
+    JwtFilter ..> UsuarioService : usa
+    SecurityConfig ..> JwtFilter : usa
+    AdminMasterSeeder ..> AdmService : usa
+}
+
+' ─────────────────────────────────────────
+'  PACOTE: exception
+' ─────────────────────────────────────────
+package "exception" #FFEBEE {
+
+    class RegraDeNegocioException {
+        + RegraDeNegocioException(mensagem : String)
+    }
+
+    class UsuarioNaoEncontradoException {
+        + UsuarioNaoEncontradoException(identificador : String)
+    }
+
+    RegraDeNegocioException --|> RuntimeException
+    UsuarioNaoEncontradoException --|> RuntimeException
+}
+
+@enduml

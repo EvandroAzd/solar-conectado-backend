@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST http://localhost:8080/usuarios/cadastro -H 'Content-Type: application/json' -d '{\"nome\":\"João Compartilhador\",\"email\":\"joao@teste.com\",\"senha\":\"Senha@123\",\"cpf\":\"111.444.777-35\"}')",
+      "Bash(curl -s -X POST http://localhost:8080/usuarios/login -H 'Content-Type: application/json' -d '{\"email\":\"joao@teste.com\",\"senha\":\"Senha@123\"}')"
+    ]
+  }
+}
