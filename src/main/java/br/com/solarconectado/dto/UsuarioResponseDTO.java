@@ -11,6 +11,7 @@ public record UsuarioResponseDTO(
         String email,
         String cpf,
         boolean ativo,
+        int pontos,
         LocalDateTime criadoEm
 ) {
     public static UsuarioResponseDTO de(Usuario usuario) {
@@ -20,6 +21,7 @@ public record UsuarioResponseDTO(
                 usuario.getEmail(),
                 usuario.getCpf(),
                 usuario.getAtivo(),
+                usuario.getPontos(),
                 usuario.getDataHoraCad()
         );
     }
