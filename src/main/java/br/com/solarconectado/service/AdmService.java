@@ -1,6 +1,8 @@
 package br.com.solarconectado.service;
 
+import br.com.solarconectado.dto.AdmPerfilEdicaoDTO;
 import br.com.solarconectado.dto.AdmResponseDTO;
+import br.com.solarconectado.dto.AdmTrocaSenhaDTO;
 import br.com.solarconectado.dto.PromoverAdmDTO;
 import br.com.solarconectado.entity.Adm;
 import br.com.solarconectado.entity.Usuario;
@@ -11,6 +13,7 @@ import br.com.solarconectado.repository.AdmRepository;
 import br.com.solarconectado.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +27,7 @@ public class AdmService {
     private final AdmRepository admRepository;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public void cadastrarAdmMaster(String nome, String email, String senha, String cpf) {
@@ -113,6 +117,44 @@ public class AdmService {
             throw new RegraDeNegocioException("Este ADM já está ativo");
 
         adm.setAtivo(true);
+    }
+
+    @Transactional
+    public AdmResponseDTO atualizarPerfil(AdmPerfilEdicaoDTO dto) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Adm adm = admRepository.findByUsuarioEmail(email)
+                .orElseThrow(() -> new RegraDeNegocioException("ADM não encontrado"));
+
+        if (!adm.getIsMaster())
+            throw new RegraDeNegocioException("Apenas o ADM master pode alterar o próprio perfil por aqui");
+
+        Usuario usuario = adm.getUsuario();
+
+        if (!usuario.getEmail().equals(dto.email()) && usuarioRepository.findByEmail(dto.email()).isPresent())
+            throw new RegraDeNegocioException("Este e-mail já está em uso");
+
+        usuario.setNome(dto.nome());
+        usuario.setEmail(dto.email());
+        usuario.setCpf(dto.cpf());
+
+        return AdmResponseDTO.de(adm);
+    }
+
+    @Transactional
+    public void trocarSenha(AdmTrocaSenhaDTO dto) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Adm adm = admRepository.findByUsuarioEmail(email)
+                .orElseThrow(() -> new RegraDeNegocioException("ADM não encontrado"));
+
+        if (!adm.getIsMaster())
+            throw new RegraDeNegocioException("Apenas o ADM master pode trocar a senha por aqui");
+
+        Usuario usuario = adm.getUsuario();
+
+        if (!passwordEncoder.matches(dto.senhaAtual(), usuario.getSenha()))
+            throw new RegraDeNegocioException("Senha atual incorreta");
+
+        usuario.setSenha(passwordEncoder.encode(dto.novaSenha()));
     }
 }
 

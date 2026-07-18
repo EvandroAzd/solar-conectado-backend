@@ -1,6 +1,8 @@
 package br.com.solarconectado.controller;
 
+import br.com.solarconectado.dto.AdmPerfilEdicaoDTO;
 import br.com.solarconectado.dto.AdmResponseDTO;
+import br.com.solarconectado.dto.AdmTrocaSenhaDTO;
 import br.com.solarconectado.dto.PromoverAdmDTO;
 import br.com.solarconectado.service.AdmService;
 import jakarta.validation.Valid;
@@ -45,6 +47,17 @@ public class AdmController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable UUID id) {
         admService.remover(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/perfil")
+    public ResponseEntity<AdmResponseDTO> atualizarPerfil(@Valid @RequestBody AdmPerfilEdicaoDTO dto) {
+        return ResponseEntity.ok(admService.atualizarPerfil(dto));
+    }
+
+    @PutMapping("/perfil/senha")
+    public ResponseEntity<Void> trocarSenha(@Valid @RequestBody AdmTrocaSenhaDTO dto) {
+        admService.trocarSenha(dto);
         return ResponseEntity.noContent().build();
     }
 }
